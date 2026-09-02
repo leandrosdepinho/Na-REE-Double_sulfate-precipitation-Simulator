@@ -697,7 +697,6 @@ if st.session_state.results is None:
                 "REE": symbol,
                 "Name": entry["name"],
                 "Ksp": f"{entry['ksp']:.2e}",
-                "Ksp status": entry["ksp_status"],
             })
 
         st.dataframe(pd.DataFrame(database_rows), use_container_width=True, hide_index=True)
@@ -803,7 +802,6 @@ with tab4:
             "REE": symbol,
             "Name": entry["name"],
             "Ksp": entry["ksp"],
-            "Ksp status": entry["ksp_status"],
             "Complexant": complexant_key,
             f"{complexant_key} pKa": ", ".join(map(str, complexant_data["pKas"])),
             f"{complexant_key} log β": complexant_data["log_beta"][symbol],
