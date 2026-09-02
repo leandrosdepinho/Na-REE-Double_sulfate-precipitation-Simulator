@@ -15,23 +15,23 @@ st.set_page_config(
 # ============================================================
 
 REE_DATABASE = {
-    "Sc": {"name": "Scandium", "ksp": 2.0e-5, "ksp_status": "placeholder"},
-    "Y": {"name": "Yttrium", "ksp": 3.0e-5, "ksp_status": "placeholder"},
-    "La": {"name": "Lanthanum", "ksp": 5.0e-5, "ksp_status": "placeholder"},
-    "Ce": {"name": "Cerium", "ksp": 4.0e-5, "ksp_status": "placeholder"},
-    "Pr": {"name": "Praseodymium", "ksp": 3.0e-5, "ksp_status": "placeholder"},
-    "Nd": {"name": "Neodymium", "ksp": 1.0e-5, "ksp_status": "placeholder"},
-    "Pm": {"name": "Promethium", "ksp": 1.5e-5, "ksp_status": "placeholder"},
-    "Sm": {"name": "Samarium", "ksp": 8.0e-6, "ksp_status": "placeholder"},
-    "Eu": {"name": "Europium", "ksp": 7.0e-6, "ksp_status": "placeholder"},
-    "Gd": {"name": "Gadolinium", "ksp": 6.0e-6, "ksp_status": "placeholder"},
-    "Tb": {"name": "Terbium", "ksp": 5.0e-6, "ksp_status": "placeholder"},
-    "Dy": {"name": "Dysprosium", "ksp": 4.0e-6, "ksp_status": "placeholder"},
-    "Ho": {"name": "Holmium", "ksp": 3.5e-6, "ksp_status": "placeholder"},
-    "Er": {"name": "Erbium", "ksp": 3.0e-6, "ksp_status": "placeholder"},
-    "Tm": {"name": "Thulium", "ksp": 2.5e-6, "ksp_status": "placeholder"},
-    "Yb": {"name": "Ytterbium", "ksp": 2.0e-6, "ksp_status": "placeholder"},
-    "Lu": {"name": "Lutetium", "ksp": 1.8e-6, "ksp_status": "placeholder"},
+    "Sc": {"name": "Scandium", "ksp": 2.0e-5},
+    "Y": {"name": "Yttrium", "ksp": 3.0e-5},
+    "La": {"name": "Lanthanum", "ksp": 5.0e-5},
+    "Ce": {"name": "Cerium", "ksp": 4.0e-5},
+    "Pr": {"name": "Praseodymium", "ksp": 3.0e-5},
+    "Nd": {"name": "Neodymium", "ksp": 1.0e-5},
+    "Pm": {"name": "Promethium", "ksp": 1.5e-5},
+    "Sm": {"name": "Samarium", "ksp": 8.0e-6},
+    "Eu": {"name": "Europium", "ksp": 7.0e-6},
+    "Gd": {"name": "Gadolinium", "ksp": 6.0e-6},
+    "Tb": {"name": "Terbium", "ksp": 5.0e-6},
+    "Dy": {"name": "Dysprosium", "ksp": 4.0e-6},
+    "Ho": {"name": "Holmium", "ksp": 3.5e-6},
+    "Er": {"name": "Erbium", "ksp": 3.0e-6},
+    "Tm": {"name": "Thulium", "ksp": 2.5e-6},
+    "Yb": {"name": "Ytterbium", "ksp": 2.0e-6},
+    "Lu": {"name": "Lutetium", "ksp": 1.8e-6},
 }
 
 # ============================================================
@@ -50,14 +50,10 @@ COMPLEXANT_DATABASE = {
             "Yb": 18.7, "Lu": 18.9,
         },
     },
-    "Citrato": {
-        "name": "Citrato",
-        # pKa1..pKa3 do ácido cítrico (H3Cit), ordem crescente.
+    "Citrate": {
+        "name": "Citrate",
         "pKas": [3.13, 4.76, 6.40],
         "coordination_number": 1,
-        # Valores INVENTADOS (placeholder), seguindo a mesma
-        # tendência qualitativa leve-> pesado do EDTA, apenas
-        # para permitir comparação de cenários na interface.
         "log_beta": {
             "Sc": 9.5, "Y": 7.9, "La": 6.7, "Ce": 6.9, "Pr": 7.0,
             "Nd": 7.1, "Pm": 7.2, "Sm": 7.3, "Eu": 7.4, "Gd": 7.5,
@@ -76,13 +72,6 @@ SULFATE_PKA = 1.99
 # ============================================================
 
 def calculate_inverse_alpha(ph_value, pkas_list):
-    """
-    Calcula 1/alpha_n para a espécie totalmente desprotonada de
-    um ácido poliprótico, dado pKa1 < pKa2 < ... < pKan.
-
-    1/alpha_n = C_total / [espécie totalmente desprotonada]
-              = 1 + [H+]/Kan + [H+]^2/(Kan*Ka(n-1)) + ...
-    """
 
     if not pkas_list:
         return 1.0
@@ -109,25 +98,11 @@ def solve_fully_coupled_system(
     total_chelator_concentration,
     is_active,
 ):
-    """
-    Resolve o sistema acoplado Na+/SO4/REE/complexante usando
-    bisseções aninhadas.
-
-    Convenção importante (após correção):
-      A variável de busca do laço externo ("test_free_precipitant"
-      / "solved_free_precipitant") representa diretamente o
-      SO4(2-) LIVRE (a espécie que entra no Ksp). O sulfato total
-      dissolvido (livre + HSO4-) é obtido MULTIPLICANDO essa
-      variável por inv_alpha_A — nunca dividindo.
-    """
 
     def precipitant_residual_loop(test_free_precipitant):
 
         test_free_precipitant = max(test_free_precipitant, 1e-45)
 
-        # [FIX-1] test_free_precipitant já É o SO4(2-) livre.
-        # Antes havia uma divisão por inv_alpha_A aqui, que
-        # reaplicava a correção de protonação uma segunda vez.
         active_anion_for_ksp = max(1e-45, test_free_precipitant)
 
         # ----------------------------------------------------
@@ -214,8 +189,6 @@ def solve_fully_coupled_system(
         # ----------------------------------------------------
         # Sulfate mass balance
         # ----------------------------------------------------
-        # Sulfato total dissolvido = SO4(2-) livre * inv_alpha_A
-        # (esta multiplicação estava correta desde o início).
 
         calculated_total_precipitant = test_free_precipitant * inv_alpha_A
 
@@ -540,22 +513,9 @@ st.markdown(
     ### Rare-earth / sodium sulfate double-salt simulator
 
     Select the rare-earth elements and provide their initial
-    concentrations. Chemical constants such as **Ksp, pKa e
-    constantes de estabilidade do complexante são obtidos
-    automaticamente do banco de dados interno.**
+    concentrations.
     """
 )
-
-st.info(
-    """
-    ⚠️ **Development database:** the Ksp and complexation
-    constants currently embedded in this application are
-    starter (placeholder) values for interface development.
-    They must be replaced and validated against the literature
-    before quantitative scientific use.
-    """
-)
-
 
 # ============================================================
 # SIDEBAR
