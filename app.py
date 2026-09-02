@@ -590,14 +590,8 @@ with st.sidebar:
             + ", ".join(map(str, complexant_data["pKas"]))
         )
 
-        if complexant_key == "Citrato":
-            st.caption(
-                "⚠️ Constantes de citrato também são placeholder "
-                "(valores inventados), assim como as de EDTA."
-            )
-
     else:
-        complexant_key = "EDTA"  # irrelevante quando desativado
+        complexant_key = "EDTA"
         total_chelator_concentration = 0.0
 
     # --------------------------------------------------------
