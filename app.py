@@ -560,7 +560,7 @@ with st.sidebar:
         )
 
     # --------------------------------------------------------
-    # Complexante (EDTA / Citrato)
+    # Chelating agent (EDTA / Citrate)
     # --------------------------------------------------------
 
     st.divider()
